@@ -7,6 +7,17 @@ import sys
 from body import Body
 
 
+def force_between(earth: Body, sun: Body):
+    dx = earth.x - sun.x
+    dy = earth.y - sun.y
+    distance = math.sqrt(dx ** 2 + dy ** 2)
+    force = Game.G * ((earth.mass * sun.mass) / distance ** 2)
+    angle = math.atan2(dy, dx)
+    x_force = (math.cos(angle) * force / earth.mass)
+    earth.velocity.x -= x_force
+    earth.velocity.y -= math.sin(angle) * force / earth.mass
+
+
 class Game:
     G = 6.674 * 10 ** -11
 
@@ -19,63 +30,57 @@ class Game:
         self.planets = self.create_planets()
 
     def create_planets(self) -> [Body]:
-        sun = Body(
-            mass=400000000000,
-            semi_minor_axis=0,
-            coordinates=Rect(
-                (self.screen.get_width() / 2),
-                (self.screen.get_height() / 2),
-                0,
-                0),
-            velocity=Vector2())
-        earth = Body(
-            mass=10000,
-            semi_minor_axis=149.596,
-            coordinates=Rect(420, 240, 0, 0),
-            velocity=Vector2(0.2, -0.2))
-
-        return [sun, earth]
-
-    def force_between(self, earth: Body, sun: Body):
-        dx = earth.x - sun.x
-        dy = earth.y - sun.y
-        distance = math.sqrt(dx ** 2 + dy ** 2)
-        force = Game.G * ((earth.mass * sun.mass) / distance ** 2)
-        angle = math.atan2(dy, dx)
-        x_force = (math.cos(angle) * force / earth.mass)
-        earth.velocity.x -= x_force
-        earth.velocity.y -= math.sin(angle) * force / earth.mass
-        sun.velocity.x -= math.cos(angle) * force / sun.mass
-        sun.velocity.y -= math.sin(angle) * force / sun.mass
+        sun = Body(mass=400000000000,
+                   coordinates=Rect((self.screen.get_width() / 2),
+                                    (self.screen.get_height() / 2),
+                                    10,
+                                    10),
+                   velocity=Vector2(),
+                   game_instance=self,
+                   color=(200, 245, 25))
+        return [
+            sun,
+            Body(
+                mass=10000,
+                coordinates=Rect(420, 240, 9, 9),
+                velocity=Vector2(0.08, -0.05),
+                game_instance=self,
+                color=(50, 220, 100)),
+            Body(
+                mass=10000000,
+                coordinates=Rect(sun.coordinates.x, 140, 10, 10),
+                velocity=Vector2(0.2, 0.05),
+                game_instance=self),
+            Body(
+                mass=10000,
+                coordinates=Rect(sun.coordinates.x, 190, 10, 10),
+                velocity=Vector2(0.10, -0.01),
+                game_instance=self)
+        ]
 
     def draw_sun(self):
         sun = self.planets[0]
-        pygame.draw.circle(self.screen, (200, 255, 255), (sun.x, sun.y), 10)
+        pygame.draw.circle(self.screen, sun.color, (sun.x, sun.y), 10)
 
     def tick(self):
-        self.clock.tick(60)
+        self.clock.tick(120)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
 
-        self.screen.fill((0, 0, 0))
+        self.screen.fill((10, 10, 10))
 
-        earth = self.planets[1]
-        sun = self.planets[0]
-        self.force_between(earth, sun)
-        # earth.coordinates = earth.coordinates.move(earth.velocity.x, earth.velocity.y)
-        earth.x += earth.velocity.x
-        earth.y += earth.velocity.y
-        earth.coordinates.x = earth.x
-        earth.coordinates.y = earth.y
+        for body in self.planets:
+            for other in self.planets:
+                if body == other:
+                    continue
 
-        sun.x += sun.velocity.x
-        sun.y += sun.velocity.y
-        sun.coordinates.x = sun.x
-        sun.coordinates.y = sun.y
-        # sun.coordinates = sun.coordinates.move(sun.velocity.x, sun.velocity.y)
+                force_between(body, other)
+                body.x += body.velocity.x
+                body.y += body.velocity.y
+                body.coordinates.x = body.x
+                body.coordinates.y = body.y
+            pygame.draw.circle(self.screen, body.color, (body.coordinates.x, body.coordinates.y), 8)
+
         self.draw_sun()
-        er = earth.coordinates
-
-        pygame.draw.circle(self.screen, (180, 180, 180), (er.x, er.y), 8)
         pygame.display.flip()
