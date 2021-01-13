@@ -1,4 +1,3 @@
-import math
 import pygame
 from pygame import Surface, Rect
 from pygame.math import Vector2
@@ -7,22 +6,11 @@ import sys
 from body import Body
 
 
-def force_between(earth: Body, sun: Body):
-    dx = earth.x - sun.x
-    dy = earth.y - sun.y
-    distance = math.sqrt(dx ** 2 + dy ** 2)
-    force = Game.G * ((earth.mass * sun.mass) / distance ** 2)
-    angle = math.atan2(dy, dx)
-    x_force = (math.cos(angle) * force / earth.mass)
-    earth.velocity.x -= x_force
-    earth.velocity.y -= math.sin(angle) * force / earth.mass
-
-
 class Game:
     G = 6.674 * 10 ** -11
 
     def __init__(self):
-        self.scale: float = 0.5
+        self.__scale: int = 1
         self.time_scale = 1
         pygame.init()
         self.screen: Surface = pygame.display.set_mode((1280, 720))
@@ -60,13 +48,20 @@ class Game:
 
     def draw_sun(self):
         sun = self.planets[0]
-        pygame.draw.circle(self.screen, sun.color, (sun.x, sun.y), 10)
+        pygame.draw.circle(self.screen, sun.color, (sun.coordinates.x, sun.coordinates.y), 10 * self.__scale)
 
     def tick(self):
         self.clock.tick(120)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                pressed = pygame.key.get_pressed()
+                if pressed[pygame.K_COMMA]:
+                    self.scale = self.scale / 2
+                elif pressed[pygame.K_PERIOD]:
+                    self.scale = self.scale * 2
 
         self.screen.fill((10, 10, 10))
 
@@ -75,12 +70,26 @@ class Game:
                 if body == other:
                     continue
 
-                force_between(body, other)
-                body.x += body.velocity.x
-                body.y += body.velocity.y
-                body.coordinates.x = body.x
-                body.coordinates.y = body.y
-            pygame.draw.circle(self.screen, body.color, (body.coordinates.x, body.coordinates.y), 8)
+                body.force_between(other)
 
-        self.draw_sun()
+            body.x += body.velocity.x
+            body.y += body.velocity.y
+            body.draw()
+
+        # self.screen.blit(self.scaled_screen, (0, 0))
         pygame.display.flip()
+
+    @property
+    def scale(self):
+        return self.__scale
+
+    @scale.setter
+    def scale(self, scale):
+        if scale >= 1:
+            # c, d = self.screen.get_width() / 2, self.screen.get_height() / 2,
+            # factor = scale / self.__scale
+            # for b in self.planets:
+            #     b.coordinates.x = c + factor * (b.coordinates.x - c)
+            #     b.coordinates.y = d + factor * (b.coordinates.y - d)
+
+            self.__scale = int(scale)

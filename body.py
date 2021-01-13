@@ -1,6 +1,11 @@
+import math
+
+import pygame
 from pygame.math import Vector2
 from pygame.rect import Rect
 import random
+
+import game
 
 
 def random_color() -> (int, int, int):
@@ -18,9 +23,9 @@ class Body:
             color: (int, int, int) = None
     ):
         self.mass = mass
-        self.coordinates = coordinates
-        self.x = float(coordinates.x)
-        self.y = float(coordinates.y)
+        self.__coordinates = coordinates
+        self.__x = float(coordinates.x * game_instance.scale)
+        self.__y = float(coordinates.y * game_instance.scale)
         self.velocity = velocity
         from game import Game
         self.game: Game = game_instance
@@ -28,3 +33,42 @@ class Body:
             self.color = random_color()
         else:
             self.color = color
+
+    @property
+    def x(self):
+        return self.__x
+
+    @x.setter
+    def x(self, x):
+        self.__x = x
+        self.coordinates.x = x / self.game.scale
+
+    @property
+    def y(self):
+        return self.__y
+
+    @y.setter
+    def y(self, y):
+        self.__y = y
+        self.coordinates.y = y / self.game.scale
+
+    @property
+    def coordinates(self):
+        return self.__coordinates
+
+    @coordinates.setter
+    def coordinates(self, coordinates):
+        self.__coordinates = coordinates
+
+    def draw(self):
+        pygame.draw.circle(self.game.screen, self.color, (self.coordinates.x, self.coordinates.y), 8 * self.game.scale)
+
+    def force_between(self, other):
+        dx = self.x - other.x
+        dy = self.y - other.y
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+        force = game.Game.G * ((self.mass * other.mass) / distance ** 2)
+        angle = math.atan2(dy, dx)
+        x_force = (math.cos(angle) * force / self.mass)
+        self.velocity.x -= x_force
+        self.velocity.y -= math.sin(angle) * force / self.mass
