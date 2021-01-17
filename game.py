@@ -13,6 +13,7 @@ class Game:
         self.__scale: int = 1
         self.time_scale = 1
         pygame.init()
+        pygame.display.set_caption("Orbit Simulator")
         self.screen: Surface = pygame.display.set_mode((1280, 720))
         self.clock = pygame.time.Clock()
         self.planets = self.create_planets()
@@ -46,10 +47,6 @@ class Game:
                 game_instance=self)
         ]
 
-    def draw_sun(self):
-        sun = self.planets[0]
-        pygame.draw.circle(self.screen, sun.color, (sun.coordinates.x, sun.coordinates.y), 10 * self.__scale)
-
     def tick(self):
         self.clock.tick(120)
 
@@ -58,23 +55,25 @@ class Game:
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 pressed = pygame.key.get_pressed()
-                if pressed[pygame.K_COMMA]:
-                    self.scale = self.scale / 2
-                elif pressed[pygame.K_PERIOD]:
-                    self.scale = self.scale * 2
+                if pressed[pygame.K_COMMA] and self.time_scale > 1:
+                    self.time_scale = int(self.time_scale / 2)
+                elif pressed[pygame.K_PERIOD] and self.time_scale < 1000:
+                    self.time_scale = int(self.time_scale * 2)
 
         self.screen.fill((10, 10, 10))
 
-        for body in self.planets:
-            for other in self.planets:
-                if body == other:
-                    continue
+        for i in range(self.time_scale):
+            for body in self.planets:
+                for other in self.planets:
+                    if body == other:
+                        continue
 
-                body.force_between(other)
+                    body.force_between(other)
 
-            body.x += body.velocity.x
-            body.y += body.velocity.y
-            body.draw()
+                body.x += body.velocity.x
+                body.y += body.velocity.y
+                if i == self.time_scale - 1:
+                    body.draw()
 
         # self.screen.blit(self.scaled_screen, (0, 0))
         pygame.display.flip()
@@ -84,7 +83,7 @@ class Game:
         return self.__scale
 
     @scale.setter
-    def scale(self, scale):
+    def scale(self, scale: int):
         if scale >= 1:
             # c, d = self.screen.get_width() / 2, self.screen.get_height() / 2,
             # factor = scale / self.__scale

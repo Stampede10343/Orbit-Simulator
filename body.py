@@ -1,11 +1,17 @@
 import math
 
-import pygame
 from pygame.math import Vector2
 from pygame.rect import Rect
 import random
 
 import game
+
+from pygame import gfxdraw
+
+
+def draw_circle(surface, x, y, radius, color):
+    gfxdraw.aacircle(surface, x, y, int(radius), color)
+    gfxdraw.filled_circle(surface, x, y, int(radius), color)
 
 
 def random_color() -> (int, int, int):
@@ -61,14 +67,22 @@ class Body:
         self.__coordinates = coordinates
 
     def draw(self):
-        pygame.draw.circle(self.game.screen, self.color, (self.coordinates.x, self.coordinates.y), 8 * self.game.scale)
+        draw_circle(self.game.screen,
+                    self.coordinates.x,
+                    self.coordinates.y,
+                    self.mass ** (1 / 7),
+                    self.color)
+        # pygame.draw.circle(self.game.screen,
+        #                    self.color,
+        #                    (self.coordinates.x, self.coordinates.y),
+        #                    self.mass ** (1 / 7))
 
     def force_between(self, other):
-        dx = self.x - other.x
-        dy = self.y - other.y
+        dx = other.x - self.x
+        dy = other.y - self.y
         distance = math.sqrt(dx ** 2 + dy ** 2)
         force = game.Game.G * ((self.mass * other.mass) / distance ** 2)
         angle = math.atan2(dy, dx)
         x_force = (math.cos(angle) * force / self.mass)
-        self.velocity.x -= x_force
-        self.velocity.y -= math.sin(angle) * force / self.mass
+        self.velocity.x += x_force
+        self.velocity.y += math.sin(angle) * force / self.mass
