@@ -4,7 +4,7 @@ from game import Game
 def main():
     game = Game()
 
-    while True:
+    while game.alive:
         game.tick()
 
 

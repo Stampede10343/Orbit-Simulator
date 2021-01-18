@@ -1,8 +1,10 @@
+import sys
+import time
+
 import pygame
 from pygame import Surface, Rect
 from pygame.font import Font
 from pygame.math import Vector2
-import sys
 
 from body import Body
 
@@ -17,21 +19,23 @@ class Game:
         pygame.display.set_caption("Orbit Simulator")
         self.screen: Surface = pygame.display.set_mode((1280, 720))
         self.clock = pygame.time.Clock()
+        self.sun = Body(
+            mass=400000000000,
+            coordinates=Rect((self.screen.get_width() / 2),
+                             (self.screen.get_height() / 2),
+                             10,
+                             10),
+            velocity=Vector2(),
+            game_instance=self,
+            color=(200, 245, 25))
         self.planets = self.create_planets()
         self.paused = False
+        self.alive = True
         self.font: Font = pygame.font.SysFont(pygame.font.get_default_font(), 24)
 
     def create_planets(self) -> [Body]:
-        sun = Body(mass=400000000000,
-                   coordinates=Rect((self.screen.get_width() / 2),
-                                    (self.screen.get_height() / 2),
-                                    10,
-                                    10),
-                   velocity=Vector2(),
-                   game_instance=self,
-                   color=(200, 245, 25))
         return [
-            sun,
+            self.sun,
             Body(
                 mass=10000,
                 coordinates=Rect(420, 240, 9, 9),
@@ -40,12 +44,12 @@ class Game:
                 color=(50, 220, 100)),
             Body(
                 mass=10000000,
-                coordinates=Rect(sun.coordinates.x, 140, 10, 10),
-                velocity=Vector2(0.2, 0.05),
+                coordinates=Rect(self.sun.coordinates.x, 140, 10, 10),
+                velocity=Vector2(0.1, 0.05),
                 game_instance=self),
             Body(
                 mass=10000,
-                coordinates=Rect(sun.coordinates.x, 190, 10, 10),
+                coordinates=Rect(self.sun.coordinates.x, 190, 10, 10),
                 velocity=Vector2(0.10, -0.01),
                 game_instance=self)
         ]
@@ -64,6 +68,8 @@ class Game:
                     self.time_scale = int(self.time_scale * 2)
                 elif pressed[pygame.K_SPACE]:
                     self.paused = not self.paused
+                elif pressed[pygame.K_q]:
+                    self.alive = False
 
         if self.paused:
             return
