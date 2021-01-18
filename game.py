@@ -1,5 +1,6 @@
 import pygame
 from pygame import Surface, Rect
+from pygame.font import Font
 from pygame.math import Vector2
 import sys
 
@@ -17,6 +18,8 @@ class Game:
         self.screen: Surface = pygame.display.set_mode((1280, 720))
         self.clock = pygame.time.Clock()
         self.planets = self.create_planets()
+        self.paused = False
+        self.font: Font = pygame.font.SysFont(pygame.font.get_default_font(), 24)
 
     def create_planets(self) -> [Body]:
         sun = Body(mass=400000000000,
@@ -55,12 +58,18 @@ class Game:
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 pressed = pygame.key.get_pressed()
-                if pressed[pygame.K_COMMA] and self.time_scale > 1:
+                if pressed[pygame.K_COMMA] and self.time_scale > 1 and not self.paused:
                     self.time_scale = int(self.time_scale / 2)
-                elif pressed[pygame.K_PERIOD] and self.time_scale < 1000:
+                elif pressed[pygame.K_PERIOD] and self.time_scale < 1000 and not self.paused:
                     self.time_scale = int(self.time_scale * 2)
+                elif pressed[pygame.K_SPACE]:
+                    self.paused = not self.paused
+
+        if self.paused:
+            return
 
         self.screen.fill((10, 10, 10))
+        self.draw_time_scale()
 
         for i in range(self.time_scale):
             for body in self.planets:
@@ -92,3 +101,8 @@ class Game:
             #     b.coordinates.y = d + factor * (b.coordinates.y - d)
 
             self.__scale = int(scale)
+
+    def draw_time_scale(self):
+        ts = self.font.render("{}x".format(self.time_scale), True, (200, 200, 200))
+
+        self.screen.blit(ts, (2, self.screen.get_height() - ts.get_height()))
