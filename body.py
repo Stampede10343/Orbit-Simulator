@@ -76,12 +76,10 @@ class Body:
                     self.coordinates.y,
                     self.mass ** (1 / 8),
                     self.color)
-        # pygame.draw.circle(self.game.screen,
-        #                    self.color,
-        #                    (self.coordinates.x, self.coordinates.y),
-        #                    self.mass ** (1 / 7))
 
     def force_between(self, other):
+        if self.game.time_scale > 1000 and other != self.game.sun:
+            return
         dx = other.x - self.x
         dy = other.y - self.y
         distance = math.sqrt(dx ** 2 + dy ** 2)
