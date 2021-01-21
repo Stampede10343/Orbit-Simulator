@@ -67,10 +67,14 @@ class Body:
         self.__coordinates = coordinates
 
     def draw(self):
+        if self.x >= 30000 or self.y >= 30000 or self.x <= -30000 or self.y <= -30000:
+            self.game.planets.remove(self)
+            return
+
         draw_circle(self.game.screen,
                     self.coordinates.x,
                     self.coordinates.y,
-                    self.mass ** (1 / 7),
+                    self.mass ** (1 / 8),
                     self.color)
         # pygame.draw.circle(self.game.screen,
         #                    self.color,
